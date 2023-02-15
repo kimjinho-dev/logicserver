@@ -79,16 +79,18 @@ public class LogicManager { //게임의 진행을 보조하는 사회자의 역�
         LM.room_info.roomId=roomID;
         LM.room_info.round=1;
         LM.room_info.voteRound=1;
+        LM.spreadJob();
+        LM.findFirstLeader();
 
-            if (LM.big_round == 1 && LM.small_round == 1) {
-                LM.spreadJob();
-                LM.findFirstLeader();
-                // 이 때 한 번 프론트로 보내                   줘야함.
-
-            } else {// not first round
-                LM.findAfterLeader();// 수정 필요
-                // 이 때 한 번 프론트로 보내줘야함.
-            }
+//            if (LM.big_round == 1 && LM.small_round == 1) {
+//                LM.spreadJob();
+//                LM.findFirstLeader();
+//                // 이 때 한 번 프론트로 보내                   줘야함.
+//
+//            } else {// not first round
+//                LM.findAfterLeader();// 수정 필요
+//                // 이 때 한 번 프론트로 보내줘야함.
+//            }
     }//게임 시작 알림.
 
 

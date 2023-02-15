@@ -41,7 +41,7 @@ public class LogicController {
         //바디에 있는 데이터 세팅후
         redisform.setPlayerList(bodys.getPlayerList());
         redisform.setRoomStatus("Active");
-        redisform.setStatus("MakeJury");//? 정확한 키워드 필요
+        redisform.setStatus("makeJury");//? 정확한 키워드 필요
         redisform.setRoomId(roomId);
         redisform.setRound(1);
         redisform.setVoteRound(1);
@@ -52,11 +52,12 @@ public class LogicController {
         LM.setRoom_info(redisform);
 
         LM.spreadJob();// 직업분배 이 안에 jsondto의 roominfo가 변경됨
-        if (bodys.getRound() == 1 && bodys.getVoteRound() == 1) {
-            LM.findFirstLeader();// 또한 안의 roominfo가 변경됨
-        } else {
-            LM.findAfterLeader();// 위와 같음   ??
-        }
+        LM.findFirstLeader();
+//        if (bodys.getRound() == 1 && bodys.getVoteRound() == 1) {
+//            LM.findFirstLeader();// 또한 안의 roominfo가 변경됨
+//        } else {
+//            LM.findAfterLeader();// 위와 같음   ??
+//        }
         System.out.println(LM.room_info.getPlayerList().toString());
 
         repo.save(LM.room_info);// 바로 레디스에 저장하기
@@ -205,9 +206,6 @@ public class LogicController {
                 // 배심원단 구성 완료. 유무죄 투표 단계로 진행
                 // 빅라운드 그대로, 스몰라운드 그대로
                 redisFormEntity.status = "resultAgreeDisagree";
-                for (UserDTO userDTO : redisFormEntity.playerList) {
-                    userDTO.setIsJury(false);
-                }
             } else {
                 if (redisFormEntity.voteRound >= 5) {
                     redisFormEntity.status = "resultGame";
@@ -327,6 +325,10 @@ public class LogicController {
             redisFormEntity.status = "resultGame";
         }
 
+        for (UserDTO userDTO : redisFormEntity.playerList) {
+            userDTO.setIsJury(false);
+        }
+
         // 현재 상태 재저장
         repo.save(redisFormEntity);
         messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
@@ -352,6 +354,12 @@ public class LogicController {
             return new ResponseEntity<RedisFormEntity>(redisFormEntity, HttpStatus.ACCEPTED);
 
     }
+//
+//    // 브로드캐스트 테스트
+//    @PostMapping(value = "/test/{roomId}")
+//    public void test(@PathVariable String roomId) {
+//        messagingTemplate.convertAndSend("/sub/game/" + roomId, "test");
+//    }
 
 }
 
