@@ -131,52 +131,6 @@ public class LogicController {
         //return ResponseEntity.ok(body.toString());
     }//구성 배심원단 상태 전달받아서 저장 후 객체 저장 후 투표진행 마킹 요구 후 리턴
 
-    // 원정대 찬성반대 투표결과 bd
-//    @PostMapping(value = "/game/make/{roomId}")// param 안되면 pathvariable쓰기
-//    public ResponseEntity<JsonBridgeDTO> getGameStart(@RequestBody List<AgreeDisAgreeDTO> body, @RequestParam String roomId){// parameter : roomID
-//
-//        // body내용 레디스 초안 불러와서 갱신 후 lm에 넘기기
-//        // LogicManager LM= new LogicManager(1,1,room_id);// 게임시작
-//       // @PathVariable String nicks;
-//
-//        int rr   = repo.findById(roomId).get().round;
-//        int vr = repo.findById(roomId).get().voteRound;
-//        LogicManager LM= new LogicManager(rr,vr,roomId);
-//        LM.room_info= repo.findById(roomId).get();// 갱신
-//
-//        int vote_res=0;
-//        for(int s=0;s<body.size();s++){
-//           if(body.get(s).getVote()==true){
-//               vote_res++;
-//           }
-//           else {
-//           }
-//        }
-//        if(vote_res<3){
-//
-//            LM.room_info.setVoteRound(LM.room_info.getVoteRound()+1);
-//
-//            if(LM.room_info.getVoteRound()==5){
-//
-//                LM.room_info.setRound(LM.room_info.getRound()+1);// 악의세력 승리
-//                LM.room_info.setRoomStatus("gameEnd");
-//                repo.save(LM.room_info);
-//
-//            }
-//            else{
-//
-//                LM.room_info.setRoomStatus("GuiltyBotguilty");
-//
-//            }
-//
-//        }
-
-//
-//        //return new ResponseEntity<JsonBridgeDTO>(, HttpStatus.ACCEPTED);
-//
-//
-//    }//선택된 배심원단 1인에 대한?
-
 
 //
     @PostMapping(value = "/game/insidelog/{round}/{roomId}")
@@ -238,22 +192,6 @@ public class LogicController {
                 } else {
                     // 투표는 무산, 배심원단 구성 단계로 다시 돌아가야함
                     // 빅라운드 그대로, 스몰라운드 추가로
-//                        try{
-//                            redisFormEntity.status = "resultAgreeDisagree";
-//                            messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
-//                            Thread.sleep(5000);
-//                            } catch(Exception e){
-//                        redisFormEntity.voteRound += 1;
-//                        redisFormEntity.status = "makeJury";
-//                        for (UserDTO userDTO : redisFormEntity.playerList) {
-//                            userDTO.setIsJury(false);
-//                            }
-//                        LogicManager LM = new LogicManager();
-//                        LM.room_info = redisFormEntity;
-//                        LM.findAfterLeader();
-//                        redisFormEntity = LM.room_info;
-//                        messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
-//                        }
                             redisFormEntity.status = "resultAgreeDisagree";
                             messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
                             Thread.sleep(5000);
@@ -318,6 +256,10 @@ public class LogicController {
                     for (UserDTO userDTO : redisFormEntity.playerList) {
                         userDTO.setIsJury(false);
                     }
+                    LogicManager LM = new LogicManager();
+                    LM.room_info = redisFormEntity;
+                    LM.findAfterLeader();
+                    redisFormEntity = LM.room_info;
 
                 }
                 break;
@@ -342,6 +284,10 @@ public class LogicController {
                     for (UserDTO userDTO : redisFormEntity.playerList) {
                         userDTO.setIsJury(false);
                     }
+                    LogicManager LM = new LogicManager();
+                    LM.room_info = redisFormEntity;
+                    LM.findAfterLeader();
+                    redisFormEntity = LM.room_info;
 
                 }
                 break;
@@ -367,6 +313,10 @@ public class LogicController {
                     for (UserDTO userDTO : redisFormEntity.playerList) {
                         userDTO.setIsJury(false);
                     }
+                    LogicManager LM = new LogicManager();
+                    LM.room_info = redisFormEntity;
+                    LM.findAfterLeader();
+                    redisFormEntity = LM.room_info;
                 }
                 break;
         }
@@ -481,68 +431,68 @@ public class LogicController {
     // 그리고 이를 레디스에 계속 업데이트 한다.
 
 
-//    public void saveAgreeVote(String roomId){
-//        // 인자로 들어오는 ett는 반드시 모든 갱신이 이뤄진 후의 인자여야 작동하는 메소드임.
-//        RedisFormEntity redisFormEntity = repo.findById(roomId).get();
-//        insideLogEntity ett = repols.findById("insidelog"+redisFormEntity.roomId).get();
-//        int num= redisFormEntity.playerList.size();
-//
-//
-//        // 레디스 불러오기
-//        ett.round= redisFormEntity.round;
-//
-//        for(int s=0;s<num;s++){// playerList정보 복제를 위한 곳
-//            LogBaseDTO temp= new LogBaseDTO();
-//
-//            temp.setNickname(redisFormEntity.playerList.get(s).getNickname());
-//            temp.setIsLeader(redisFormEntity.playerList.get(s).getIsLeader());
-//            temp.setIsJury(redisFormEntity.playerList.get(s).getIsJury());
-//
-//            for(int j=0;j<redisFormEntity.agreeDisagree.size();j++){
-//
-//                if(redisFormEntity.agreeDisagree.get(s).getNickname().equals(temp.getNickname())){
-//                    temp.setVote(redisFormEntity.agreeDisagree.get(s).getAgree());
-//                    break;
-//                }
-//            }
-//            System.out.println(ett);
-//            System.out.println(ett.logs);
-//            if (ett.logs == null) {
-//                ArrayList<Map<Integer,LogBaseDTO>> tempList = new ArrayList<Map<Integer,LogBaseDTO>>();
-//                ett.logs = tempList;
-//            }
-//            try {
-//                ett.logs.get(redisFormEntity.round - 1);
-//            } catch (Exception e) {
+    public void saveAgreeVote(String roomId){
+        // 인자로 들어오는 ett는 반드시 모든 갱신이 이뤄진 후의 인자여야 작동하는 메소드임.
+        RedisFormEntity redisFormEntity = repo.findById(roomId).get();
+        insideLogEntity ett = repols.findById("insidelog"+redisFormEntity.roomId).get();
+        int num= redisFormEntity.playerList.size();
+
+
+        // 레디스 불러오기
+        ett.round= redisFormEntity.round;
+
+        for(int s=0;s<num;s++){// playerList정보 복제를 위한 곳
+            LogBaseDTO temp= new LogBaseDTO();
+
+            temp.setNickname(redisFormEntity.playerList.get(s).getNickname());
+            temp.setIsLeader(redisFormEntity.playerList.get(s).getIsLeader());
+            temp.setIsJury(redisFormEntity.playerList.get(s).getIsJury());
+
+            for(int j=0;j<redisFormEntity.agreeDisagree.size();j++){
+
+                if(redisFormEntity.agreeDisagree.get(s).getNickname().equals(temp.getNickname())){
+                    temp.setVote(redisFormEntity.agreeDisagree.get(s).getAgree());
+                    break;
+                }
+            }
+            System.out.println(ett);
+            System.out.println(ett.logs);
+            if (ett.logs == null) {
+                ArrayList<Map<Integer,LogBaseDTO>> tempList = new ArrayList<Map<Integer,LogBaseDTO>>();
+                ett.logs = tempList;
+            }
+            try {
+                ett.logs.get(redisFormEntity.round - 1);
+            } catch (Exception e) {
+                Map<Integer,LogBaseDTO> tempMap = new HashMap<Integer,LogBaseDTO>();
+                ett.logs.add(tempMap);
+            }
+//            if (ett.logs.get(redisFormEntity.round) == null) {
 //                Map<Integer,LogBaseDTO> tempMap = new HashMap<Integer,LogBaseDTO>();
 //                ett.logs.add(tempMap);
 //            }
-////            if (ett.logs.get(redisFormEntity.round) == null) {
-////                Map<Integer,LogBaseDTO> tempMap = new HashMap<Integer,LogBaseDTO>();
-////                ett.logs.add(tempMap);
-////            }
-//            ett.logs.get(redisFormEntity.round - 1).put(redisFormEntity.voteRound,temp);
-//            // 1-1
-//            // 2-1
-//        }// dto 1 end
-//        repols.save(ett);
-//    }
-//
-//    public void saveGuiltyVote(String roomId) {
-//        RedisFormEntity redisFormEntity = repo.findById(roomId).get();
-//        insideLogEntity ett = repols.findById("insidelog"+redisFormEntity.roomId).get();
-//        // 레디스 불러오기
-//
-//        try {
-//            ett.result.get(redisFormEntity.round - 1);
-//        } catch (Exception e) {
-//            Map<String,Integer> tempMap = new HashMap<String,Integer>();
-//            ett.result.add(tempMap);
-//        }
-//        ett.result.get(ett.round-1).put("success", redisFormEntity.getGuilty());
-//        ett.result.get(ett.round-1).put("fail", redisFormEntity.getNotGuilty());
-//        repols.save(ett);
-//    }
+            ett.logs.get(redisFormEntity.round - 1).put(redisFormEntity.voteRound,temp);
+            // 1-1
+            // 2-1
+        }// dto 1 end
+        repols.save(ett);
+    }
+
+    public void saveGuiltyVote(String roomId) {
+        RedisFormEntity redisFormEntity = repo.findById(roomId).get();
+        insideLogEntity ett = repols.findById("insidelog"+redisFormEntity.roomId).get();
+        // 레디스 불러오기
+
+        try {
+            ett.result.get(redisFormEntity.round - 1);
+        } catch (Exception e) {
+            Map<String,Integer> tempMap = new HashMap<String,Integer>();
+            ett.result.add(tempMap);
+        }
+        ett.result.get(ett.round-1).put("success", redisFormEntity.getGuilty());
+        ett.result.get(ett.round-1).put("fail", redisFormEntity.getNotGuilty());
+        repols.save(ett);
+    }
 
 }
 
