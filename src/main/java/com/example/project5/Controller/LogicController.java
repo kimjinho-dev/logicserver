@@ -214,9 +214,7 @@ public class LogicController {
                 }
             }
 
-            redisFormEntity.status = "resultAgreeDisagree";
-            messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
-            Thread.sleep(5000);
+
 
             // 투표, 라운드에 따른 분기나누기
             // 분기 나뉠때 차이인건 status
@@ -231,9 +229,15 @@ public class LogicController {
 //                    redisFormEntity.status = "voteGuiltyNotGuilty";
 //                    messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
 //                }
+                redisFormEntity.status = "resultAgreeDisagree";
+                messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
+                Thread.sleep(5000);
                 redisFormEntity.status = "voteGuiltyNotGuilty";
             } else {
                 if (redisFormEntity.voteRound >= 5) {
+                    redisFormEntity.status = "resultAgreeDisagree";
+                    messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
+                    Thread.sleep(5000);
                     redisFormEntity.status = "resultGame";
                 } else {
                     // 투표는 무산, 배심원단 구성 단계로 다시 돌아가야함
@@ -254,6 +258,9 @@ public class LogicController {
 //                        redisFormEntity = LM.room_info;
 //                        messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
 //                        }
+                            redisFormEntity.status = "resultAgreeDisagree";
+                            messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
+                            Thread.sleep(5000);
                             redisFormEntity.voteRound += 1;
                             redisFormEntity.status = "makeJury";
                             for (UserDTO userDTO : redisFormEntity.playerList) {
