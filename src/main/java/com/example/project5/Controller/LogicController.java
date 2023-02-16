@@ -331,8 +331,6 @@ public class LogicController {
             }
         }
 
-        messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
-        Thread.sleep(5000);
         // 유죄 3번시 -> 경찰투표
         if (winCount == 3) {
             redisFormEntity.status = "winCitizen";
