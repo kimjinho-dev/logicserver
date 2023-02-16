@@ -10,6 +10,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -50,8 +51,25 @@ public class RedisFormEntity {
         this.agreeDisagree = agreeDisagree;
     }
 
+//    public RedisFormEntity(String roomId) {
+//        this.roomId = roomId;
+//    }
+
+    // 경찬이코드
     public RedisFormEntity(String roomId) {
         this.roomId = roomId;
+        this.roomStatus = roomStatus;
+        this.round = round;
+        this.voteRound = voteRound;
+        this.status = status;
+        this.script = script;
+        this.guilty = guilty;
+        this.notGuilty = notGuilty;
+        this.playerList = new ArrayList<UserDTO>() ;
+
+        this.prevRound = prevRound;
+        this.agreeDisagree = agreeDisagree;
+
     }
 
 
