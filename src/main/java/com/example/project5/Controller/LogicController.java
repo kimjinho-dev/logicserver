@@ -229,13 +229,13 @@ public class LogicController {
 //                }
                 redisFormEntity.status = "resultAgreeDisagree";
                 messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
-                Thread.sleep(5000);
+//                Thread.sleep(5000);
                 redisFormEntity.status = "voteGuiltyNotGuilty";
             } else {
                 if (redisFormEntity.voteRound >= 5) {
                     redisFormEntity.status = "resultAgreeDisagree";
                     messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
-                    Thread.sleep(5000);
+//                    Thread.sleep(5000);
                     redisFormEntity.status = "resultGame";
                 } else {
                     // 투표는 무산, 배심원단 구성 단계로 다시 돌아가야함
@@ -258,7 +258,7 @@ public class LogicController {
 //                        }
                             redisFormEntity.status = "resultAgreeDisagree";
                             messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
-                            Thread.sleep(5000);
+//                            Thread.sleep(5000);
                             redisFormEntity.voteRound += 1;
                             redisFormEntity.status = "makeJury";
                             for (UserDTO userDTO : redisFormEntity.playerList) {
@@ -360,7 +360,7 @@ public class LogicController {
         }
 
         messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
-        Thread.sleep(5000);
+//        Thread.sleep(5000);
         // 유죄 3번시 -> 경찰투표
         if (winCount == 3) {
             redisFormEntity.status = "winCitizen";
@@ -412,15 +412,23 @@ public class LogicController {
 //    // 그리고 이를 레디스에 계속 업데이트 한다.
 
 
-    public void saveInsideLog(String roomId, int round, int voteRound, insideLogEntity ett){
-        // 인자로 들어오는 ett는 반드시 모든 갱신이 이뤄진 후의 인자여야 작동하는 메소드임.
-
-        String redisLogPart= "insidelog".concat(roomId);//키값에 유니크성 부여
-
-        ett.roomId=redisLogPart;// 이러면 기본 레디스와 안겹친다 아마
-        repols.save(ett);
-
-    }// 라운드가 끝날 때 마다 ett의 갱신을 한다. 이 때 큰 라운드= 배열 인덱스 , 작은 라운드는 그냥 키값으로 부여해서 맵에 저장한다.
+//    public void saveInsideLog(String roomId, int round, int voteRound){
+//        // 인자로 들어오는 ett는 반드시 모든 갱신이 이뤄진 후의 인자여야 작동하는 메소드임.
+//        RedisFormEntity redisFormEntity = repo.findById(roomId).get();
+//        for (UserDTO userDTO : redisFormEntity.playerList) {
+//            LogBaseDTO logBaseDTO = new LogBaseDTO(userDTO);
+//            redisFormEntity.agreeDisagree.stream()
+//                    .filter(a->a.getNickname().equals(userDTO.getNickname())).;
+//            logBaseDTO.setVote();
+//        }
+//        insideLogEntity logData = new insideLogEntity();
+//        logData.roomId="insidelog".concat(roomId);// 이러면 기본 레디스와 안겹친다 아마
+//        logData.setRound(round);
+//
+//
+//        repols.save(ett);
+//
+//    }// 라운드가 끝날 때 마다 ett의 갱신을 한다. 이 때 큰 라운드= 배열 인덱스 , 작은 라운드는 그냥 키값으로 부여해서 맵에 저장한다.
     // 그리고 이를 레디스에 계속 업데이트 한다.
 
 
