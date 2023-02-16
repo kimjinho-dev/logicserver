@@ -44,6 +44,12 @@ public class LogicController {
 
 //        System.out.println(bodys.getPlayerList().toString());
 
+        String sproomId = "insidelog".concat(roomId);
+
+        LM.setRoom_info(redisform);
+        insideLogEntity etts=
+                new insideLogEntity(sproomId,LM.room_info.round,new ArrayList<Map<Integer,LogBaseDTO>>(), new ArrayList<Map<String,Integer>>() );
+        repols.save(etts);
 
         //바디에 있는 데이터 세팅후
         redisform.setPlayerList(bodys.getPlayerList());
@@ -174,7 +180,7 @@ public class LogicController {
 
 //
     @PostMapping(value = "/game/insidelog/{round}/{roomId}")
-    public ResponseEntity<RoundLogDTO> PostGetLogs(@RequestParam int round,@RequestParam  String roomId){// parameter :
+    public ResponseEntity<RoundLogDTO> PostGetLogs(@PathVariable int round,@PathVariable  String roomId){// parameter :
 
         // 이전 로그들을 어디에 기록할 것인가? ->레디스에 단계마다 저장된 로그들을 풀어보자
         // 현재 라운드에 대한 로그들을 어떻게 기록하거나 바로 표시해줄 것인가?
@@ -183,7 +189,6 @@ public class LogicController {
         // 라운드가 끝나는 분기점에서 레디스에 기록
 
         LoggingManager LG= new LoggingManager();
-
         insideLogEntity ett=repols.findById("insidelog".concat(roomId)).get();
 
         return new ResponseEntity<RoundLogDTO>(ett.toDTO(round), HttpStatus.ACCEPTED);
@@ -205,6 +210,7 @@ public class LogicController {
 
         if (redisFormEntity.agreeDisagree.size() == 6) {
             repo.save(redisFormEntity);
+//            saveAgreeVote(roomId);
             // 찬성표합산
             List<AgreeDisAgreeDTO> votes = redisFormEntity.agreeDisagree;
             int agree = 0;
@@ -219,14 +225,6 @@ public class LogicController {
             if (agree > 3) {
                 // 배심원단 구성 완료. 유무죄 투표 단계로 진행
                 // 빅라운드 그대로, 스몰라운드 그대로
-//                try{
-//                    redisFormEntity.status = "resultAgreeDisagree";
-//                    messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
-//                    Thread.sleep(5000);
-//                } catch(Exception e){
-//                    redisFormEntity.status = "voteGuiltyNotGuilty";
-//                    messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
-//                }
                 redisFormEntity.status = "resultAgreeDisagree";
                 messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
                 Thread.sleep(5000);
@@ -302,6 +300,10 @@ public class LogicController {
         switch (redisFormEntity.round) {
             case 1:
                 if (guiltyCount == 2) {
+//                    saveGuiltyVote(roomId);
+                    redisFormEntity.status = "resultGuiltyNotGuilty";
+                    messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
+                    Thread.sleep(5000);
                     if (redisFormEntity.notGuilty > 0) {
                         prevRoundDTO.setWin("Lose");
                     } else {
@@ -312,12 +314,20 @@ public class LogicController {
                     redisFormEntity.notGuilty = 0;
                     redisFormEntity.guilty = 0;
                     redisFormEntity.prevRound.add(prevRoundDTO);
-                    redisFormEntity.status = "resultGuiltyNotGuilty";
+                    redisFormEntity.status = "makeJury";
+                    for (UserDTO userDTO : redisFormEntity.playerList) {
+                        userDTO.setIsJury(false);
+                    }
+
                 }
                 break;
             case 2:
             case 4:
                 if (guiltyCount == 3) {
+//                    saveGuiltyVote(roomId);
+                    redisFormEntity.status = "resultGuiltyNotGuilty";
+                    messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
+                    Thread.sleep(5000);
                     if (redisFormEntity.notGuilty > 0) {
                         prevRoundDTO.setWin("Lose");
                     } else {
@@ -328,12 +338,20 @@ public class LogicController {
                     redisFormEntity.notGuilty = 0;
                     redisFormEntity.guilty = 0;
                     redisFormEntity.prevRound.add(prevRoundDTO);
-                    redisFormEntity.status = "resultGuiltyNotGuilty";
+                    redisFormEntity.status = "makeJury";
+                    for (UserDTO userDTO : redisFormEntity.playerList) {
+                        userDTO.setIsJury(false);
+                    }
+
                 }
                 break;
             case 3:
             case 5:
                 if (guiltyCount == 4) {
+//                    saveGuiltyVote(roomId);
+                    redisFormEntity.status = "resultGuiltyNotGuilty";
+                    messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
+                    Thread.sleep(5000);
                     if (redisFormEntity.notGuilty > 0) {
                         prevRoundDTO.setWin("Lose");
                     } else {
@@ -344,7 +362,11 @@ public class LogicController {
                     redisFormEntity.notGuilty = 0;
                     redisFormEntity.guilty = 0;
                     redisFormEntity.prevRound.add(prevRoundDTO);
-                    redisFormEntity.status = "resultGuiltyNotGuilty";
+                    redisFormEntity.status = "makeJury";
+
+                    for (UserDTO userDTO : redisFormEntity.playerList) {
+                        userDTO.setIsJury(false);
+                    }
                 }
                 break;
         }
@@ -369,10 +391,6 @@ public class LogicController {
         // 무죄 3번시 -> 범죄자 승리로 결과
         if (LoseCount == 3) {
             redisFormEntity.status = "resultGame";
-        }
-
-        for (UserDTO userDTO : redisFormEntity.playerList) {
-            userDTO.setIsJury(false);
         }
 
         // 현재 상태 재저장
@@ -401,15 +419,46 @@ public class LogicController {
 
     }
 
-//    public void saveInsideLog(String roomId, int round, int voteRound, insideLogEntity ett){
+//    public void saveInsideLog(String roomId){
 //        // 인자로 들어오는 ett는 반드시 모든 갱신이 이뤄진 후의 인자여야 작동하는 메소드임.
+//        RedisFormEntity redisFormEntity = repo.findById(roomId).get();
+//        int num= redisFormEntity.playerList.size();
+//        insideLogEntity ett = repols.findById("insidelog"+roomId).get();// 레디스 불러오기
+//        ett.round= redisFormEntity.round;
 //
-//        String redisLogPart= "insidelog".concat(roomId);//키값에 유니크성 부여
-//        ett.roomId=redisLogPart;// 이러면 기본 레디스와 안겹친다 아마
+//        for(int s=0;s<num;s++){// playerList정보 복제를 위한 곳
+//            LogBaseDTO temp= new LogBaseDTO();
+//
+//            temp.setNickname(redisFormEntity.playerList.get(s).getNickname());
+//            temp.setIsLeader(redisFormEntity.playerList.get(s).getIsLeader());
+//            temp.setIsJury(redisFormEntity.playerList.get(s).getIsJury());
+//
+//            for(int j=0;j<redisFormEntity.agreeDisagree.size();j++){
+//
+//                if(redisFormEntity.agreeDisagree.get(s).getNickname().equals(temp.getNickname())){
+//                    temp.setVote(redisFormEntity.agreeDisagree.get(s).getAgree());
+//                    break;
+//                }
+//            }
+//            ett.logs.get(redisFormEntity.round).put(redisFormEntity.voteRound,temp);
+//        }// dto 1 end
+//        int temp =0;
+//
+//
+//        for(int s=0;s<redisFormEntity.getAgreeDisagree().size();s++) {// result
+//            if(redisFormEntity.getAgreeDisagree().get(s).getAgree()){
+//                temp++;
+//            }
+//        }
+//        int notagree = redisFormEntity.agreeDisagree.size()-temp;
+//
+//        ett.result.get(ett.round).put("success",temp);
+//        ett.result.get(ett.round).put("fail",notagree);
+//
 //        repols.save(ett);
 //
 //    }// 라운드가 끝날 때 마다 ett의 갱신을 한다. 이 때 큰 라운드= 배열 인덱스 , 작은 라운드는 그냥 키값으로 부여해서 맵에 저장한다.
-//    // 그리고 이를 레디스에 계속 업데이트 한다.
+    // 그리고 이를 레디스에 계속 업데이트 한다.
 
 
 //    public void saveInsideLog(String roomId, int round, int voteRound){
@@ -417,8 +466,8 @@ public class LogicController {
 //        RedisFormEntity redisFormEntity = repo.findById(roomId).get();
 //        for (UserDTO userDTO : redisFormEntity.playerList) {
 //            LogBaseDTO logBaseDTO = new LogBaseDTO(userDTO);
-//            redisFormEntity.agreeDisagree.stream()
-//                    .filter(a->a.getNickname().equals(userDTO.getNickname())).;
+//            Bo = redisFormEntity.agreeDisagree.stream()
+//                    .filter(a->a.getNickname().equals(userDTO.getNickname())).findFirst().get().getAgree();
 //            logBaseDTO.setVote();
 //        }
 //        insideLogEntity logData = new insideLogEntity();
@@ -431,6 +480,69 @@ public class LogicController {
 //    }// 라운드가 끝날 때 마다 ett의 갱신을 한다. 이 때 큰 라운드= 배열 인덱스 , 작은 라운드는 그냥 키값으로 부여해서 맵에 저장한다.
     // 그리고 이를 레디스에 계속 업데이트 한다.
 
+
+//    public void saveAgreeVote(String roomId){
+//        // 인자로 들어오는 ett는 반드시 모든 갱신이 이뤄진 후의 인자여야 작동하는 메소드임.
+//        RedisFormEntity redisFormEntity = repo.findById(roomId).get();
+//        insideLogEntity ett = repols.findById("insidelog"+redisFormEntity.roomId).get();
+//        int num= redisFormEntity.playerList.size();
+//
+//
+//        // 레디스 불러오기
+//        ett.round= redisFormEntity.round;
+//
+//        for(int s=0;s<num;s++){// playerList정보 복제를 위한 곳
+//            LogBaseDTO temp= new LogBaseDTO();
+//
+//            temp.setNickname(redisFormEntity.playerList.get(s).getNickname());
+//            temp.setIsLeader(redisFormEntity.playerList.get(s).getIsLeader());
+//            temp.setIsJury(redisFormEntity.playerList.get(s).getIsJury());
+//
+//            for(int j=0;j<redisFormEntity.agreeDisagree.size();j++){
+//
+//                if(redisFormEntity.agreeDisagree.get(s).getNickname().equals(temp.getNickname())){
+//                    temp.setVote(redisFormEntity.agreeDisagree.get(s).getAgree());
+//                    break;
+//                }
+//            }
+//            System.out.println(ett);
+//            System.out.println(ett.logs);
+//            if (ett.logs == null) {
+//                ArrayList<Map<Integer,LogBaseDTO>> tempList = new ArrayList<Map<Integer,LogBaseDTO>>();
+//                ett.logs = tempList;
+//            }
+//            try {
+//                ett.logs.get(redisFormEntity.round - 1);
+//            } catch (Exception e) {
+//                Map<Integer,LogBaseDTO> tempMap = new HashMap<Integer,LogBaseDTO>();
+//                ett.logs.add(tempMap);
+//            }
+////            if (ett.logs.get(redisFormEntity.round) == null) {
+////                Map<Integer,LogBaseDTO> tempMap = new HashMap<Integer,LogBaseDTO>();
+////                ett.logs.add(tempMap);
+////            }
+//            ett.logs.get(redisFormEntity.round - 1).put(redisFormEntity.voteRound,temp);
+//            // 1-1
+//            // 2-1
+//        }// dto 1 end
+//        repols.save(ett);
+//    }
+//
+//    public void saveGuiltyVote(String roomId) {
+//        RedisFormEntity redisFormEntity = repo.findById(roomId).get();
+//        insideLogEntity ett = repols.findById("insidelog"+redisFormEntity.roomId).get();
+//        // 레디스 불러오기
+//
+//        try {
+//            ett.result.get(redisFormEntity.round - 1);
+//        } catch (Exception e) {
+//            Map<String,Integer> tempMap = new HashMap<String,Integer>();
+//            ett.result.add(tempMap);
+//        }
+//        ett.result.get(ett.round-1).put("success", redisFormEntity.getGuilty());
+//        ett.result.get(ett.round-1).put("fail", redisFormEntity.getNotGuilty());
+//        repols.save(ett);
+//    }
 
 }
 

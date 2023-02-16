@@ -27,6 +27,10 @@ public class insideLogEntity {
 
     }
 
+    public insideLogEntity(String roomId) {
+        this.roomId = roomId;
+    }
+
     public insideLogEntity(String roomId, int round, ArrayList<Map<Integer, LogBaseDTO>> logs, ArrayList<Map<String, Integer>> result) {
         this.roomId = roomId;
         this.round = round;
