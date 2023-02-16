@@ -229,13 +229,13 @@ public class LogicController {
 //                }
                 redisFormEntity.status = "resultAgreeDisagree";
                 messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
-//                Thread.sleep(5000);
+                Thread.sleep(5000);
                 redisFormEntity.status = "voteGuiltyNotGuilty";
             } else {
                 if (redisFormEntity.voteRound >= 5) {
                     redisFormEntity.status = "resultAgreeDisagree";
                     messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
-//                    Thread.sleep(5000);
+                    Thread.sleep(5000);
                     redisFormEntity.status = "resultGame";
                 } else {
                     // 투표는 무산, 배심원단 구성 단계로 다시 돌아가야함
@@ -258,7 +258,7 @@ public class LogicController {
 //                        }
                             redisFormEntity.status = "resultAgreeDisagree";
                             messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
-//                            Thread.sleep(5000);
+                            Thread.sleep(5000);
                             redisFormEntity.voteRound += 1;
                             redisFormEntity.status = "makeJury";
                             for (UserDTO userDTO : redisFormEntity.playerList) {
@@ -360,7 +360,7 @@ public class LogicController {
         }
 
         messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
-//        Thread.sleep(5000);
+        Thread.sleep(5000);
         // 유죄 3번시 -> 경찰투표
         if (winCount == 3) {
             redisFormEntity.status = "winCitizen";
