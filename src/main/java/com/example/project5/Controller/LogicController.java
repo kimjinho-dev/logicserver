@@ -214,8 +214,6 @@ public class LogicController {
                 }
             }
 
-
-
             // 투표, 라운드에 따른 분기나누기
             // 분기 나뉠때 차이인건 status
             if (agree > 3) {
@@ -283,7 +281,7 @@ public class LogicController {
 
 
     @PostMapping(value = "/game/secvote/")
-    public ResponseEntity<RedisFormEntity> PostVoteSecond(@RequestBody GuiltyNotGuiltyDTO guiltyData) {// parameter : roomID
+    public ResponseEntity<RedisFormEntity> PostVoteSecond(@RequestBody GuiltyNotGuiltyDTO guiltyData) throws InterruptedException {// parameter : roomID
 // 서비스 호출해서 addVote 실행
         String roomId = guiltyData.getRoomId();
         RedisFormEntity redisFormEntity = repo.findById(roomId).get();
@@ -362,12 +360,7 @@ public class LogicController {
         }
 
         messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
-
-        try{
-            Thread.sleep(5000);
-        } catch(Exception e){
-        }
-
+        Thread.sleep(5000);
         // 유죄 3번시 -> 경찰투표
         if (winCount == 3) {
             redisFormEntity.status = "winCitizen";
@@ -401,8 +394,6 @@ public class LogicController {
                 break;
             }
         }
-
-
             repo.save(redisFormEntity);
             messagingTemplate.convertAndSend("/sub/message/user/" + policeget.getRoomId(), redisFormEntity);
 
