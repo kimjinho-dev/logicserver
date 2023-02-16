@@ -150,7 +150,7 @@ public class LogicController {
     }//로그 작업용 부분임.
 
 
-    @PostMapping(value = "/game/firstvote/")
+    @PostMapping(value = "/game/firstvote")
     public ResponseEntity<RedisFormEntity> PostVoteFirst(@RequestBody agreeOrNotDTO agreeData) throws InterruptedException {// parameter : roomID
         // 서비스 호출해서 addVote 실행
         String roomId = agreeData.getRoomId();
@@ -216,7 +216,7 @@ public class LogicController {
     }//협의 후 api 형태 골라야 할듯  먼저 다 정렬해서 주는지 일일히 선택이 들어올 때 마다 할건지 분기점이 다름
 
 
-    @PostMapping(value = "/game/secvote/")
+    @PostMapping(value = "/game/secvote")
     public ResponseEntity<RedisFormEntity> PostVoteSecond(@RequestBody GuiltyNotGuiltyDTO guiltyData) throws InterruptedException {// parameter : roomID
 // 서비스 호출해서 addVote 실행
         String roomId = guiltyData.getRoomId();
@@ -288,7 +288,6 @@ public class LogicController {
                     LM.room_info = redisFormEntity;
                     LM.findAfterLeader();
                     redisFormEntity = LM.room_info;
-
                 }
                 break;
             case 3:
@@ -348,7 +347,7 @@ public class LogicController {
     }
 
 
-    @PostMapping(value = "/game/policechoice/")
+    @PostMapping(value = "/game/policechoice")
     public ResponseEntity<RedisFormEntity> policeChoice(@RequestBody policeGetDTO policeget) {
         RedisFormEntity redisFormEntity = repo.findById(policeget.getRoomId()).get();
         redisFormEntity.status = "resultGame";
