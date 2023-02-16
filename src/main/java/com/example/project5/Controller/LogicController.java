@@ -192,7 +192,7 @@ public class LogicController {
 
 
     @PostMapping(value = "/game/firstvote/")
-    public ResponseEntity<RedisFormEntity> PostVoteFirst(@RequestBody agreeOrNotDTO agreeData) {// parameter : roomID
+    public ResponseEntity<RedisFormEntity> PostVoteFirst(@RequestBody agreeOrNotDTO agreeData) throws InterruptedException {// parameter : roomID
         // 서비스 호출해서 addVote 실행
         String roomId = agreeData.getRoomId();
         RedisFormEntity redisFormEntity = repo.findById(roomId).get();
@@ -214,53 +214,61 @@ public class LogicController {
                 }
             }
 
+            redisFormEntity.status = "resultAgreeDisagree";
+            messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
+            Thread.sleep(5000);
 
             // 투표, 라운드에 따른 분기나누기
             // 분기 나뉠때 차이인건 status
             if (agree > 3) {
                 // 배심원단 구성 완료. 유무죄 투표 단계로 진행
                 // 빅라운드 그대로, 스몰라운드 그대로
-                try{
-                    redisFormEntity.status = "resultAgreeDisagree";
-                    messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
-                    Thread.sleep(5000);
-                } catch(Exception e){
-                    redisFormEntity.status = "voteGuiltyNotGuilty";
-                    messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
-                }
+//                try{
+//                    redisFormEntity.status = "resultAgreeDisagree";
+//                    messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
+//                    Thread.sleep(5000);
+//                } catch(Exception e){
+//                    redisFormEntity.status = "voteGuiltyNotGuilty";
+//                    messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
+//                }
+                redisFormEntity.status = "voteGuiltyNotGuilty";
             } else {
                 if (redisFormEntity.voteRound >= 5) {
-                    try{
-                        Thread.sleep(5000);
-                    } catch(Exception e){
-                        redisFormEntity.status = "resultGame";
-                        messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
-                    }
+                    redisFormEntity.status = "resultGame";
                 } else {
                     // 투표는 무산, 배심원단 구성 단계로 다시 돌아가야함
                     // 빅라운드 그대로, 스몰라운드 추가로
-                        try{
-                            redisFormEntity.status = "resultAgreeDisagree";
-                            messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
-                            Thread.sleep(5000);
-                            } catch(Exception e){
-                        redisFormEntity.voteRound += 1;
-                        redisFormEntity.status = "makeJury";
-                        for (UserDTO userDTO : redisFormEntity.playerList) {
-                            userDTO.setIsJury(false);
+//                        try{
+//                            redisFormEntity.status = "resultAgreeDisagree";
+//                            messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
+//                            Thread.sleep(5000);
+//                            } catch(Exception e){
+//                        redisFormEntity.voteRound += 1;
+//                        redisFormEntity.status = "makeJury";
+//                        for (UserDTO userDTO : redisFormEntity.playerList) {
+//                            userDTO.setIsJury(false);
+//                            }
+//                        LogicManager LM = new LogicManager();
+//                        LM.room_info = redisFormEntity;
+//                        LM.findAfterLeader();
+//                        redisFormEntity = LM.room_info;
+//                        messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
+//                        }
+                            redisFormEntity.voteRound += 1;
+                            redisFormEntity.status = "makeJury";
+                            for (UserDTO userDTO : redisFormEntity.playerList) {
+                                userDTO.setIsJury(false);
                             }
-                        LogicManager LM = new LogicManager();
-                        LM.room_info = redisFormEntity;
-                        LM.findAfterLeader();
-                        redisFormEntity = LM.room_info;
-                        messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
-                        }
-
+                            LogicManager LM = new LogicManager();
+                            LM.room_info = redisFormEntity;
+                            LM.findAfterLeader();
+                            redisFormEntity = LM.room_info;
                     }
             }
         }
         // 현재 상태 재저장
         repo.save(redisFormEntity);
+        messagingTemplate.convertAndSend("/sub/message/user/" + roomId, redisFormEntity);
         // 서비스에서 저장된값 가져오기(return값 사용하면 불필요)
         // 정상 응답 반환. 브로드캐스팅은 서비스단에서 처리
         return new ResponseEntity<RedisFormEntity>(redisFormEntity, HttpStatus.ACCEPTED);
@@ -395,10 +403,22 @@ public class LogicController {
 
     }
 
+//    public void saveInsideLog(String roomId, int round, int voteRound, insideLogEntity ett){
+//        // 인자로 들어오는 ett는 반드시 모든 갱신이 이뤄진 후의 인자여야 작동하는 메소드임.
+//
+//        String redisLogPart= "insidelog".concat(roomId);//키값에 유니크성 부여
+//        ett.roomId=redisLogPart;// 이러면 기본 레디스와 안겹친다 아마
+//        repols.save(ett);
+//
+//    }// 라운드가 끝날 때 마다 ett의 갱신을 한다. 이 때 큰 라운드= 배열 인덱스 , 작은 라운드는 그냥 키값으로 부여해서 맵에 저장한다.
+//    // 그리고 이를 레디스에 계속 업데이트 한다.
+
+
     public void saveInsideLog(String roomId, int round, int voteRound, insideLogEntity ett){
         // 인자로 들어오는 ett는 반드시 모든 갱신이 이뤄진 후의 인자여야 작동하는 메소드임.
 
         String redisLogPart= "insidelog".concat(roomId);//키값에 유니크성 부여
+
         ett.roomId=redisLogPart;// 이러면 기본 레디스와 안겹친다 아마
         repols.save(ett);
 
